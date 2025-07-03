@@ -1,9 +1,9 @@
 import os, json
 from pymongo import MongoClient
 
-USE_MONGO = os.environ.get("MONGO_URI") is not None
+USE_MONGO = os.environ.get("mongodb+srv://tirangaUser:yourStrongPassword123@cluster0.xep0rbi.mongodb.net/tiranga") is not None
 if USE_MONGO:
-    client = MongoClient(os.environ["MONGO_URI"])
+    client = MongoClient(os.environ["mongodb+srv://tirangaUser:yourStrongPassword123@cluster0.xep0rbi.mongodb.net/tiranga"])
     db = client["tiranga"]
     coll = db["history"]
 else:
