@@ -5,11 +5,8 @@ import requests
 import hashlib
 import time
 from threading import Thread
-from ws_sniffer import capture_websocket
 
-app = Flask(__name__, static_folder="static")  # Explicitly define the static folder path
-
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")  # Flask will now serve static files from the "static" folder
 CORS(app)
 
 MONGO_URI = "mongodb+srv://tirangaUser:yourStrongPassword123@cluster0.xep0rbi.mongodb.net/tiranga"
@@ -23,6 +20,9 @@ DATA_URLS = {
     "3M":  "https://draw.ar-lottery01.com/WinGo/WinGo_3M.json",
     "5M":  "https://draw.ar-lottery01.com/WinGo/WinGo_5M.json"
 }
+
+# Other functions remain unchanged
+
 
 def extract_result(entry):
     num = int(entry["number"])
