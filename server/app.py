@@ -1,53 +1,71 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from pymongo import MongoClient
-from utils import analyze_and_predict
-import os
-import datetime
+import requests
+import hashlib
+import time
 
 app = Flask(__name__)
 CORS(app)
 
-# MongoDB setup
 MONGO_URI = "mongodb+srv://tirangaUser:yourStrongPassword123@cluster0.xep0rbi.mongodb.net/tiranga"
 client = MongoClient(MONGO_URI)
 db = client["tiranga"]
 collection = db["results"]
 
-@app.route("/api/predict", methods=["POST"])
-def predict():
-    data = request.json
-    try:
-        last_results = data.get("results", [])
-        prediction = analyze_and_predict(last_results)
+DATA_URLS = {
+    "30S": "https://draw.ar-lottery01.com/WinGo/WinGo_30S.json",
+    "1M": "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json",
+    "3M": "https://draw.ar-lottery01.com/WinGo/WinGo_3M.json",
+    "5M": "https://draw.ar-lottery01.com/WinGo/WinGo_5M.json",
+}
 
-        # Store result
-        collection.insert_one({
-            "timestamp": datetime.datetime.utcnow(),
-            "input": last_results,
-            "prediction": prediction
-        })
-        return jsonify(prediction)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+def extract_result(entry):
+    num = int(entry["number"])
+    if num == 0:
+        color = "green"
+    elif num % 2 == 0:
+        color = "purple"
+    else:
+        color = "red"
+    size = "big" if num >= 5 else "small"
+    return {
+        "period": entry["period"],
+        "number": num,
+        "color": color,
+        "size": size,
+        "time": entry["time"]
+    }
 
-@app.route("/api/history", methods=["GET"])
-def history():
-    try:
-        records = list(collection.find().sort("timestamp", -1).limit(100))
-        for r in records:
-            r["_id"] = str(r["_id"])
-        return jsonify(records)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+def fetch_all_results():
+    all_data = {}
+    for label, url in DATA_URLS.items():
+        try:
+            resp = requests.get(url)
+            json_data = resp.json()
+            results = [extract_result(entry) for entry in json_data[:100]]
+            all_data[label] = results
+
+            # Save to MongoDB
+            for result in results:
+                result["_source"] = label
+                collection.update_one(
+                    {"period": result["period"], "_source": label},
+                    {"$set": result},
+                    upsert=True
+                )
+
+        except Exception as e:
+            print(f"Error fetching {label}: {e}")
+    return all_data
+
+@app.route("/api/results")
+def get_results():
+    return jsonify(fetch_all_results())
 
 @app.route("/static/popup.js")
-def popup_js():
+def serve_popup():
     return send_from_directory("static", "popup.js")
 
-@app.route("/")
-def home():
-    return "Tiranga Smart Predictor Running."
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=8080)
