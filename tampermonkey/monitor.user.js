@@ -1,4 +1,3 @@
-
 // ==UserScript==
 // @name         Tiranga WebSocket Interceptor
 // @namespace    http://tampermonkey.net/
@@ -11,7 +10,7 @@
 (function() {
     'use strict';
 
-    const BACKEND_URL = 'https://tiranga-smart-predictor.onrender.com/static/popup.js';
+    const BACKEND_URL = 'https://tiranga-smart-predictor.onrender.com/api/report';
     const OriginalWebSocket = window.WebSocket;
 
     window.WebSocket = function(url, protocols) {
