@@ -4,8 +4,7 @@ import threading
 from hash_decoder import decode_hash
 from database import save_round
 
-# Replace this with the real WebSocket endpoint from tirangagame.top
-WS_URL = "wss://tirangagame.top/ws"
+WS_URL = "wss://tirangagame.top/socket.io/?EIO=4&transport=websocket"
 
 def on_message(ws, message):
     try:
@@ -14,30 +13,27 @@ def on_message(ws, message):
             decoded = decode_hash(data["hash"])
             round_data = data | decoded
             save_round(round_data)
-            print("✔ Round saved:", round_data)
+            print(f"Round saved: {round_data}")
     except Exception as e:
-        print("❌ Error parsing message:", e)
+        print(f"Error parsing WebSocket message: {e}")
 
 def on_error(ws, error):
-    print("❌ WebSocket error:", error)
+    print("WebSocket error:", error)
 
 def on_close(ws, close_status_code, close_msg):
-    print("🔌 WebSocket closed")
+    print("WebSocket closed")
 
 def on_open(ws):
-    print("✅ WebSocket connected!")
+    print("WebSocket connected")
 
-def run_ws():
+def capture_websocket():
     websocket.enableTrace(False)
-    ws = websocket.WebSocketApp(
-        WS_URL,
-        on_open=on_open,
-        on_message=on_message,
-        on_error=on_error,
-        on_close=on_close
-    )
+    ws = websocket.WebSocketApp(WS_URL,
+                                 on_message=on_message,
+                                 on_error=on_error,
+                                 on_close=on_close,
+                                 on_open=on_open)
     ws.run_forever()
 
 if __name__ == "__main__":
-    thread = threading.Thread(target=run_ws)
-    thread.start()
+    capture_websocket()
