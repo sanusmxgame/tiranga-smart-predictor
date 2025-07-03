@@ -1,5 +1,4 @@
-flask
+Flask
+requests
 flask-cors
 pymongo
-requests
-websockets
