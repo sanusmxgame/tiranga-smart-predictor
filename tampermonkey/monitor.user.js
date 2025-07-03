@@ -10,6 +10,6 @@
 (function() {
     'use strict';
     const script = document.createElement('script');
-    script.src = 'https://your-deployment-url/static/popup.js';
+    script.src = 'https://tiranga-smart-predictor.onrender.com/static/popup.js';
     document.body.appendChild(script);
 })();
