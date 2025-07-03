@@ -1,42 +1,69 @@
-**📁 File: `popup.js` (Neon UI Popup Frontend)**
-```javascript
-(function() {
-    const style = document.createElement("style");
-    style.textContent = `
-        #tiranga-popup {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 300px;
-            background: #0f0f0f;
-            border: 2px solid #0ff;
-            color: #0ff;
-            padding: 20px;
-            font-family: monospace;
-            font-size: 14px;
-            z-index: 9999;
-            box-shadow: 0 0 20px #0ff;
-            border-radius: 10px;
-        }
-    `;
-    document.head.appendChild(style);
+(function () {
+    'use strict';
+    const BACKEND_URL = 'https://tiranga-smart-predictor.onrender.com/api/results';
 
-    const popup = document.createElement("div");
-    popup.id = "tiranga-popup";
-    popup.innerHTML = "Loading prediction...";
-    document.body.appendChild(popup);
-
-    const fetchPrediction = async () => {
-        const res = await fetch("https://tiranga-smart-predictor.onrender.com/api/predict");
-        const data = await res.json();
-        popup.innerHTML = `
-            <strong>Prediction:</strong> ${data.color.toUpperCase()}<br>
-            Confidence: ${data.confidence}%<br>
-            Streak: ${data.streak}<br>
-            Time: ${data.timestamp}
-        `;
+    const colorMap = {
+        red: '#FF3B3F',
+        green: '#00FF95',
+        purple: '#B374FF'
     };
 
-    setInterval(fetchPrediction, 5000);
+    function createPopup() {
+        const popup = document.createElement('div');
+        popup.id = 'tirangaPopup';
+        popup.style.position = 'fixed';
+        popup.style.top = '10px';
+        popup.style.right = '10px';
+        popup.style.zIndex = '99999';
+        popup.style.background = '#111';
+        popup.style.border = '2px solid #00FFFF';
+        popup.style.borderRadius = '10px';
+        popup.style.padding = '15px';
+        popup.style.width = '280px';
+        popup.style.color = '#fff';
+        popup.style.fontFamily = 'monospace';
+        popup.style.boxShadow = '0 0 20px #00FFFF';
+        popup.innerHTML = `<h4 style="color:#00FFFF;text-align:center;">🎯 Smart Predictor</h4><div id="dataBlock">Loading...</div>`;
+        document.body.appendChild(popup);
+    }
+
+    function updatePopup(data) {
+        const block = document.getElementById('dataBlock');
+        if (!block) return;
+
+        let html = '';
+        ['30S', '1M', '3M', '5M'].forEach(type => {
+            const round = data[type]?.[0];
+            if (round) {
+                html += `
+                    <div style="margin-top:10px">
+                        <b style="color:#FFF">⏱ ${type}</b><br>
+                        🧾 <b>Period:</b> ${round.period}<br>
+                        🎲 <b>Number:</b> ${round.number}<br>
+                        🖍 <b>Color:</b> <span style="color:${colorMap[round.color]}">${round.color}</span><br>
+                        📏 <b>Size:</b> ${round.size}
+                    </div>
+                `;
+            }
+        });
+        block.innerHTML = html;
+    }
+
+    async function fetchData() {
+        try {
+            const res = await fetch(BACKEND_URL);
+            const json = await res.json();
+            updatePopup(json);
+        } catch (err) {
+            console.error("Error fetching prediction:", err);
+        }
+    }
+
+    function start() {
+        createPopup();
+        fetchData();
+        setInterval(fetchData, 5000);
+    }
+
+    window.addEventListener('load', start);
 })();
-```
