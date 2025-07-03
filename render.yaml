@@ -7,4 +7,4 @@ services:
     startCommand: "python server/app.py"
     envVars:
       - key: MONGO_URI
-        value: mongodb+srv://tirangaUser:<yourStrongPassword123>@cluster0.xep0rbi.mongodb.net/tiranga
+        value: mongodb+srv://tirangaUser:yourStrongPassword123@cluster0.xep0rbi.mongodb.net/tiranga
