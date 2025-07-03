@@ -7,6 +7,8 @@ import time
 from threading import Thread
 from ws_sniffer import capture_websocket
 
+app = Flask(__name__, static_folder="static")  # Explicitly define the static folder path
+
 app = Flask(__name__)
 CORS(app)
 
