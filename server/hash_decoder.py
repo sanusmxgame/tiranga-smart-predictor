@@ -1,6 +1,8 @@
+# server/hash_decoder.py
 def decode_hash(hash_str):
-    # This is placeholder - replace with your SHA256 reverse logic if discovered
+    # Replace this stub with real logic
+    # For example: last digit rule, pattern decryption, etc.
     return {
-        "decoded_number": 7,
-        "color": "Red"
+        "decoded_number": 5,
+        "color": "Green"
     }
