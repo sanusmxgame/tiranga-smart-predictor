@@ -1,13 +1,31 @@
 <!DOCTYPE html>
 <html>
-<head><title>Admin Dashboard</title></head>
+<head>
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #eee;
+      font-family: monospace;
+    }
+    #prediction {
+      border: 1px solid #e00;
+      background: #222;
+      padding: 1rem;
+      margin: 1rem;
+      color: #f55;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
 <body>
-  <h1>Prediction</h1>
-  <div id="prediction"></div>
+  <h1>🎯 Prediction</h1>
+  <div id="prediction">Loading...</div>
   <script>
     fetch('/api/predict')
       .then(r => r.json())
-      .then(data => document.getElementById('prediction').innerText = JSON.stringify(data));
+      .then(data => document.getElementById('prediction').innerText = JSON.stringify(data, null, 2));
   </script>
 </body>
 </html>
