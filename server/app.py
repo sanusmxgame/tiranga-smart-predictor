@@ -1,48 +1,53 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from pymongo import MongoClient
-import requests, hashlib, time
-from datetime import datetime
-from utils import parse_json_results, predict_next_result
+from utils import analyze_and_predict
+import os
+import datetime
 
 app = Flask(__name__)
 CORS(app)
 
+# MongoDB setup
 MONGO_URI = "mongodb+srv://tirangaUser:yourStrongPassword123@cluster0.xep0rbi.mongodb.net/tiranga"
 client = MongoClient(MONGO_URI)
-db = client['tiranga']
+db = client["tiranga"]
+collection = db["results"]
 
-MODES = ["WinGo_30S", "WinGo_1M", "WinGo_3M", "WinGo_5M"]
-
-@app.route("/api/results/<mode>")
-def get_results(mode):
-    if mode not in MODES:
-        return jsonify({"error": "Invalid mode"}), 400
-    url = f"https://draw.ar-lottery01.com/WinGo/{mode}.json?ts={int(time.time()*1000)}"
+@app.route("/api/predict", methods=["POST"])
+def predict():
+    data = request.json
     try:
-        res = requests.get(url)
-        raw_json = res.json()
-        parsed = parse_json_results(raw_json)
-        db[mode].insert_many(parsed)
-        return jsonify(parsed)
-    except Exception as e:
-        return jsonify({"error": str(e)})
+        last_results = data.get("results", [])
+        prediction = analyze_and_predict(last_results)
 
-@app.route("/api/predict/<mode>")
-def predict(mode):
-    if mode not in MODES:
-        return jsonify({"error": "Invalid mode"}), 400
-    history = list(db[mode].find().sort("period", -1).limit(100))
-    prediction = predict_next_result(history)
-    return jsonify(prediction)
+        # Store result
+        collection.insert_one({
+            "timestamp": datetime.datetime.utcnow(),
+            "input": last_results,
+            "prediction": prediction
+        })
+        return jsonify(prediction)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/history", methods=["GET"])
+def history():
+    try:
+        records = list(collection.find().sort("timestamp", -1).limit(100))
+        for r in records:
+            r["_id"] = str(r["_id"])
+        return jsonify(records)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/static/popup.js")
-def serve_popup():
+def popup_js():
     return send_from_directory("static", "popup.js")
 
 @app.route("/")
 def home():
-    return jsonify({"message": "Tiranga Smart Predictor API"})
+    return "Tiranga Smart Predictor Running."
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
