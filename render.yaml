@@ -1,0 +1,10 @@
+
+services:
+  - type: web
+    name: tiranga-smart-predictor
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python server/app.py"
+    envVars:
+      - key: MONGO_URI
+        value: "your-mongodb-uri-here"
