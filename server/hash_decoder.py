@@ -1,8 +1,10 @@
-# server/hash_decoder.py
+import hashlib
+
 def decode_hash(hash_str):
-    # Replace this stub with real logic
-    # For example: last digit rule, pattern decryption, etc.
+    # Advanced decoder - you may try match patterns if you have input data
+    # Placeholder fallback
     return {
-        "decoded_number": 5,
-        "color": "Green"
+        "decoded_number": 7,
+        "color": "Red"
     }
+
