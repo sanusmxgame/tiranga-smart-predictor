@@ -14,7 +14,7 @@
   document.body.appendChild(box);
 
   try {
-    const res = await fetch("https://your-deployment-url/api/predict");
+    const res = await fetch("https://tiranga-smart-predictor.onrender.com/static/popup.js");
     const data = await res.json();
     box.innerText = `🎯 ${data.likely_color}\nConfidence: ${data.confidence}%\nRange: ${data.likely_range}\nSide: ${data.side}`;
   } catch (e) {
