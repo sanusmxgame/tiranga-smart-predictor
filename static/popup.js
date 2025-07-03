@@ -1,23 +1,42 @@
-(async () => {
-  const box = document.createElement("div");
-  box.style.position = "fixed";
-  box.style.bottom = "20px";
-  box.style.right = "20px";
-  box.style.background = "#111";
-  box.style.border = "2px solid #e00";
-  box.style.color = "#f55";
-  box.style.fontSize = "16px";
-  box.style.fontFamily = "monospace";
-  box.style.padding = "10px";
-  box.style.zIndex = 9999;
-  box.innerText = "Loading prediction...";
-  document.body.appendChild(box);
+**📁 File: `popup.js` (Neon UI Popup Frontend)**
+```javascript
+(function() {
+    const style = document.createElement("style");
+    style.textContent = `
+        #tiranga-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: #0f0f0f;
+            border: 2px solid #0ff;
+            color: #0ff;
+            padding: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            z-index: 9999;
+            box-shadow: 0 0 20px #0ff;
+            border-radius: 10px;
+        }
+    `;
+    document.head.appendChild(style);
 
-  try {
-    const res = await fetch("https://tiranga-smart-predictor.onrender.com/static/popup.js");
-    const data = await res.json();
-    box.innerText = `🎯 ${data.likely_color}\nConfidence: ${data.confidence}%\nRange: ${data.likely_range}\nSide: ${data.side}`;
-  } catch (e) {
-    box.innerText = "Prediction failed";
-  }
+    const popup = document.createElement("div");
+    popup.id = "tiranga-popup";
+    popup.innerHTML = "Loading prediction...";
+    document.body.appendChild(popup);
+
+    const fetchPrediction = async () => {
+        const res = await fetch("https://tiranga-smart-predictor.onrender.com/api/predict");
+        const data = await res.json();
+        popup.innerHTML = `
+            <strong>Prediction:</strong> ${data.color.toUpperCase()}<br>
+            Confidence: ${data.confidence}%<br>
+            Streak: ${data.streak}<br>
+            Time: ${data.timestamp}
+        `;
+    };
+
+    setInterval(fetchPrediction, 5000);
 })();
+```
