@@ -1,1 +1,13 @@
-<html><body><h1>Admin Dashboard</h1></body></html>
+<!DOCTYPE html>
+<html>
+<head><title>Admin Dashboard</title></head>
+<body>
+  <h1>Prediction</h1>
+  <div id="prediction"></div>
+  <script>
+    fetch('/api/predict')
+      .then(r => r.json())
+      .then(data => document.getElementById('prediction').innerText = JSON.stringify(data));
+  </script>
+</body>
+</html>
