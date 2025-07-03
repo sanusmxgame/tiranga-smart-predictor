@@ -1,37 +1,48 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from database import get_history, save_round
-from predictor import predict_next_round
-from streaks import analyze_streaks
-from hash_decoder import decode_hash
+from pymongo import MongoClient
+import requests, hashlib, time
+from datetime import datetime
+from utils import parse_json_results, predict_next_result
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/')
-def home():
-    return render_template('admin.html')
+MONGO_URI = "mongodb+srv://tirangaUser:yourStrongPassword123@cluster0.xep0rbi.mongodb.net/tiranga"
+client = MongoClient(MONGO_URI)
+db = client['tiranga']
 
-@app.route('/api/history', methods=['GET'])
-def history():
-    return jsonify(get_history())
+MODES = ["WinGo_30S", "WinGo_1M", "WinGo_3M", "WinGo_5M"]
 
-@app.route('/api/report', methods=['POST'])
-def report():
-    data = request.json
-    decoded = decode_hash(data.get("hash"))
-    save_round(data | decoded)
-    return jsonify({"status": "ok"})
+@app.route("/api/results/<mode>")
+def get_results(mode):
+    if mode not in MODES:
+        return jsonify({"error": "Invalid mode"}), 400
+    url = f"https://draw.ar-lottery01.com/WinGo/{mode}.json?ts={int(time.time()*1000)}"
+    try:
+        res = requests.get(url)
+        raw_json = res.json()
+        parsed = parse_json_results(raw_json)
+        db[mode].insert_many(parsed)
+        return jsonify(parsed)
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
-@app.route('/api/predict', methods=['GET'])
-def predict():
-    prediction = predict_next_round()
+@app.route("/api/predict/<mode>")
+def predict(mode):
+    if mode not in MODES:
+        return jsonify({"error": "Invalid mode"}), 400
+    history = list(db[mode].find().sort("period", -1).limit(100))
+    prediction = predict_next_result(history)
     return jsonify(prediction)
 
-@app.route('/api/streaks', methods=['GET'])
-def streaks():
-    return jsonify(analyze_streaks())
+@app.route("/static/popup.js")
+def serve_popup():
+    return send_from_directory("static", "popup.js")
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+@app.route("/")
+def home():
+    return jsonify({"message": "Tiranga Smart Predictor API"})
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
