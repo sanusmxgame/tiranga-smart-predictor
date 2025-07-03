@@ -2,4 +2,4 @@ flask
 flask-cors
 pymongo
 requests
-websocket-client
+websockets
