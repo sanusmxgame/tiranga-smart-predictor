@@ -1,4 +1,4 @@
-(function () {
+(function() {
     'use strict';
     const BACKEND_URL = 'https://tiranga-smart-predictor.onrender.com/api/results';
 
