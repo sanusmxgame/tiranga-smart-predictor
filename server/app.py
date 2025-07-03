@@ -4,6 +4,8 @@ from pymongo import MongoClient
 import requests
 import hashlib
 import time
+from threading import Thread
+from ws_sniffer import capture_websocket
 
 app = Flask(__name__)
 CORS(app)
@@ -15,19 +17,14 @@ collection = db["results"]
 
 DATA_URLS = {
     "30S": "https://draw.ar-lottery01.com/WinGo/WinGo_30S.json",
-    "1M": "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json",
-    "3M": "https://draw.ar-lottery01.com/WinGo/WinGo_3M.json",
-    "5M": "https://draw.ar-lottery01.com/WinGo/WinGo_5M.json",
+    "1M":  "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json",
+    "3M":  "https://draw.ar-lottery01.com/WinGo/WinGo_3M.json",
+    "5M":  "https://draw.ar-lottery01.com/WinGo/WinGo_5M.json"
 }
 
 def extract_result(entry):
     num = int(entry["number"])
-    if num == 0:
-        color = "green"
-    elif num % 2 == 0:
-        color = "purple"
-    else:
-        color = "red"
+    color = "green" if num == 0 else "red" if num % 2 else "purple"
     size = "big" if num >= 5 else "small"
     return {
         "period": entry["period"],
@@ -45,7 +42,6 @@ def fetch_all_results():
             json_data = resp.json()
             results = [extract_result(entry) for entry in json_data[:100]]
             all_data[label] = results
-
             # Save to MongoDB
             for result in results:
                 result["_source"] = label
@@ -54,7 +50,6 @@ def fetch_all_results():
                     {"$set": result},
                     upsert=True
                 )
-
         except Exception as e:
             print(f"Error fetching {label}: {e}")
     return all_data
@@ -68,4 +63,6 @@ def serve_popup():
     return send_from_directory("static", "popup.js")
 
 if __name__ == "__main__":
+    # Start WebSocket sniffer in a separate thread
+    Thread(target=capture_websocket, daemon=True).start()
     app.run(host="0.0.0.0", port=8080)
